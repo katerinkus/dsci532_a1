@@ -1,7 +1,7 @@
 import altair as alt
 from dash import Dash, html, dcc, Input, Output
 import pandas as pd
-alt.data_transformers.enable('data_server')
+#alt.data_transformers.enable('data_server')
 
 tree_df = pd.read_csv("data/street-trees.csv", sep=";")
 cherry_df = tree_df.loc[tree_df["GENUS_NAME"] == "PRUNUS"].dropna(subset=["DIAMETER"])
