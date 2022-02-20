@@ -11,6 +11,30 @@ cherry_filt = cherry_df.loc[cherry_df["DIAMETER_CM"] < 150]
 n_names = cherry_df["NEIGHBOURHOOD_NAME"].unique().tolist()
 n_names.sort()
 
+app = Dash(__name__, external_stylesheets=[
+    'https://codepen.io/chriddyp/pen/bWLwgP.css',
+    'https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap'])
+app.layout = html.Div([
+        html.H2('Cherry tree diameter'),
+        html.Div([
+            'Vancouver has an abundance of cherry blossom trees. ',
+            'Select two Vancouver neighbourhoods to compare tree diameters:',
+            html.Div([
+                dcc.Dropdown(n_names, 'DOWNTOWN', id='nei1'),
+                dcc.Dropdown(n_names, 'WEST END', id='nei2'),
+                ],
+                style={'margin-top': '20px', 'width': '50%'})
+            ],
+            style={'border-width': '0', 'margin-bottom': '10px'}),
+        html.Iframe(
+            id='density_plot',
+            style={'border-width': '0', 'width': '100%', 'height': '800px'})],
+            style={'font-family': 'Montserrat', 'width':'50%', 'margin': 'auto'})
+
+@app.callback(
+    Output('density_plot', 'srcDoc'),
+    Input('nei1', 'value'),
+    Input('nei2', 'value'))
 def plot_altair(nei1, nei2):
     chart = alt.Chart(
         cherry_filt.loc[(cherry_filt['NEIGHBOURHOOD_NAME'] == nei1) | (cherry_filt['NEIGHBOURHOOD_NAME'] == nei2)], 
@@ -24,33 +48,8 @@ def plot_altair(nei1, nei2):
     )
     return chart.to_html()
 
-app = Dash(__name__, external_stylesheets=[
-    'https://codepen.io/chriddyp/pen/bWLwgP.css',
-    'https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap'])
-app.layout = html.Div([
-        html.H2('Cherry tree diameter'),
-        html.Div([
-            'Vancouver has an abundance of cherry blossom trees.',
-            'Select two Vancouver neighbourhoods to compare tree diameters:',
-            html.Div([
-                dcc.Dropdown(n_names, 'DOWNTOWN', id='nei1'),
-                dcc.Dropdown(n_names, 'WEST END', id='nei2'),
-                ],
-                style={'margin-top': '20px', 'width': '50%'})
-            ],
-            style={'border-width': '0', 'margin-bottom': '10px'}),
-        html.Iframe(
-            id='density_plot',
-            srcDoc=plot_altair(nei1='DOWNTOWN', nei2='WEST END'),
-            style={'border-width': '0', 'width': '100%', 'height': '800px'})],
-            style={'font-family': 'Montserrat', 'width':'50%', 'margin': 'auto'})
-
-@app.callback(
-    Output('density_plot', 'srcDoc'),
-    Input('nei1', 'value'),
-    Input('nei2', 'value'))
-def update_output(nei1, nei2):
-    return plot_altair(nei1, nei2)
-
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+web: gunicorn app:server
+server = app.server
